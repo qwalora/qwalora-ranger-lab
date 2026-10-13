@@ -1,0 +1,6 @@
+{"evt":"boot","scenario":"board2","ts":"2026-10-13T09:00:00+00:00"}
+{"evt":"order_read","user":"alice","order":"1001","owner":"alice","cross_tenant":false,"ts":"2026-10-13T09:01:12+00:00"}
+{"evt":"order_read","user":"alice","order":"1002","owner":"alice","cross_tenant":false,"ts":"2026-10-13T09:01:20+00:00"}
+{"evt":"auth_fail","path":"/api/orders/2001","ts":"2026-10-13T09:03:02+00:00"}
+{"evt":"order_read","user":"alice","order":"2001","owner":"mallory","cross_tenant":true,"ts":"2026-10-13T09:03:44+00:00"}
+{"evt":"order_read","user":"mallory","order":"2001","owner":"mallory","cross_tenant":false,"ts":"2026-10-13T09:10:01+00:00"}

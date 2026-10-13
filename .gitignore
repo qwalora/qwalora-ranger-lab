@@ -1,0 +1,22 @@
+# secrets generated at spin-up (never committed)
+lab/soc/grafana/admin_password
+*.key
+*.pem
+!cohort-pubkey.pem
+
+# runtime state
+lab/soc/**/data/
+*.pcap.bak
+.qrange/
+
+# evidence capture scratch (candidates commit the finished token, not raw dumps)
+evidence/**/*.raw
+evidence/**/capture/
+evidence/**/_report.json
+
+# os / editor
+.DS_Store
+*.swp
+__pycache__/
+*.pyc
+.venv/

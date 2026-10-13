@@ -1,0 +1,90 @@
+# =============================================================================
+# Autograder. Runs on every push/PR in a candidate's fork. GitHub Actions is the
+# ONLY compute - there is no server. Each board is graded deterministically and
+# the result is written to the job summary and (on PRs) posted as a comment.
+# The job fails if any board is incomplete, so a green check == a passed board.
+# =============================================================================
+name: validate
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "lab/**"
+      - "detections/**"
+      - "evidence/**"
+      - "boards/**"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  grade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install grader deps
+        run: pip install --quiet pyyaml
+
+      - name: Grade all boards
+        id: grade
+        run: |
+          set -o pipefail
+          overall=0
+          {
+            echo "# Qwalora Ranger - autograder"
+            echo ""
+            echo "| Board | Focus | Score | Result |"
+            echo "|---|---|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+          for m in boards/*.yml; do
+            b=$(basename "$m" .yml)
+            if python3 scripts/validate.py "$b" --json-only > "/tmp/$b.json"; then
+              res="pass"; else overall=1; res="incomplete"; fi
+            score=$(python3 -c "import json;print(json.load(open('/tmp/$b.json'))['score'])")
+            title=$(python3 -c "import json;print(json.load(open('/tmp/$b.json')).get('title',''))")
+            echo "| \`$b\` | $title | $score/100 | $res |" >> "$GITHUB_STEP_SUMMARY"
+          done
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+import glob, json
+print("\n<details><summary>Per-check detail</summary>\n")
+for f in sorted(glob.glob('/tmp/board*.json')):
+    r = json.load(open(f))
+    print(f"\n### {r['board']} - {r['title']} ({r['score']}/100)\n")
+    for c in r['checks']:
+        mark = 'PASS' if c['pass'] else 'FAIL'
+        print(f"- **{mark}** `{c['id']}` ({c['weight']} pts) - {c['detail']}")
+print("\n</details>")
+PY
+          echo "overall=$overall" >> "$GITHUB_OUTPUT"
+          exit $overall
+
+      - name: Comment result on PR
+        if: ${{ always() && github.event_name == 'pull_request' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const glob = require('glob');
+            let body = "## Qwalora Ranger - autograder\n\n| Board | Score | Result |\n|---|---|---|\n";
+            for (const f of glob.sync('/tmp/board*.json')) {
+              const r = JSON.parse(fs.readFileSync(f));
+              body += `| \`${r.board}\` | ${r.score}/100 | ${r.passed ? 'pass' : 'incomplete'} |\n`;
+            }
+            body += "\nRun `./qrange status` locally for the same result.";
+            await github.rest.issues.createComment({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number, body });

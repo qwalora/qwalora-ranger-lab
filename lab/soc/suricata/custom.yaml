@@ -1,0 +1,9 @@
+# Qwalora Ranger - Suricata overrides. Mounted read-only at /etc/suricata/custom.
+# Keep the sensor on the internal segment only; it never needs egress.
+default-rule-path: /etc/suricata/rules
+rule-files:
+  - qwalora/*.rules
+vars:
+  address-groups:
+    HOME_NET: "[172.16.0.0/12,10.0.0.0/8]"
+    EXTERNAL_NET: "any"

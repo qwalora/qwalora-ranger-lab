@@ -1,0 +1,21 @@
+# Qwalora Ranger - board2 Suricata rules (shipped reference for the blue side).
+# These watch the target's HTTP for order-object access so you can corroborate
+# the Sigma/app-log detection at the network layer. sid range 9000000+ is
+# reserved for Qwalora content.
+
+# Any authenticated read of the orders API (baseline visibility).
+alert http any any -> any any ( \
+    msg:"QWALORA board2 orders API access"; \
+    flow:established,to_server; http.method; content:"GET"; \
+    http.uri; content:"/api/orders/"; \
+    sid:9000201; rev:1; \
+    metadata:attack t1190, board board2; )
+
+# Enumeration signal: many distinct order ids from one source in a short window
+# is how BOLA/IDOR looks on the wire. Tune the count to your cohort.
+alert http any any -> any any ( \
+    msg:"QWALORA board2 possible BOLA/IDOR enumeration"; \
+    flow:established,to_server; http.uri; content:"/api/orders/"; \
+    threshold:type threshold, track by_src, count 5, seconds 20; \
+    sid:9000202; rev:1; \
+    metadata:attack t1190, board board2, confidence medium; )

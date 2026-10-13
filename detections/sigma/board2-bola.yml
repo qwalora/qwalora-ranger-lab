@@ -1,0 +1,29 @@
+# Board 2 detection - YOUR WORK GOES HERE.
+#
+# Goal: write a Sigma rule that fires on the cross-tenant order read in the
+# captured log (fixtures/board2/access.log) WITHOUT flagging the benign traffic
+# (fixtures/board2/access-benign.log). Run `qrange check board2` to grade it.
+#
+# The Qwalora Sigma-subset runner supports: equals, |contains, |startswith,
+# |endswith, list = any-of, and conditions of the form "sel", "a and b",
+# "a or b", "not sel". Dotted field names index nested JSON.
+#
+# Starter below matches nothing on purpose. Make it catch the attack.
+title: BOLA cross-tenant order read
+id: 00000000-0000-0000-0000-000000000000
+status: experimental
+description: Detects an authenticated user reading an order they do not own.
+references:
+  - https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/
+tags:
+  - attack.t1190
+logsource:
+  product: qwalora
+  service: orders
+detection:
+  selection:
+    evt: order_read
+    # TODO: add the field that proves the read crossed a tenant boundary.
+    # cross_tenant: true
+  condition: selection
+level: high
