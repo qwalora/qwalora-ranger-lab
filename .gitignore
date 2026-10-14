@@ -3,10 +3,14 @@
 boards/**/alerts.json
 boards/**/threats.json
 boards/**/baseline.json
+boards/**/evidence.json
+boards/**/objectives.json
 
 # Your answer files ARE committed so CI can grade them:
 #   boards/**/triage.yml   (triage boards)
-#   boards/**/rules.yml    (detection boards)
+#   boards/**/rules.yml    (detection board)
+#   boards/**/ir.yml       (incident-response board)
+#   boards/**/flags.yml    (red-team board)
 
 # os / editor / python
 .DS_Store

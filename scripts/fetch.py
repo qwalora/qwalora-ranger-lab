@@ -30,6 +30,32 @@ def _write_json(name, obj):
         json.dump(obj, f, indent=2)
 
 
+if kind == "flags":
+    _write_json("objectives.json", ds)
+    flags = os.path.join(outdir, "flags.yml")
+    objs = ds.get("objectives", [])
+    if os.path.exists(flags):
+        print("Kept existing %s (not overwriting your work). Brief refreshed." % flags)
+    else:
+        lines = [
+            "# Board %d red team on %s. Attack your own range over WireGuard and" % (board, ds.get("domain", "the range")),
+            "# capture the flag for each objective. A flag is a QR5{...} token planted",
+            "# where only completing the objective can reach it. Paste each one here.",
+            "# Objectives and targets are in objectives.json. Total points: %d."
+            % ds.get("total_points", 100),
+            "flags:",
+        ]
+        for o in objs:
+            lines.append("  %s: \"\"   # %s (%s, %d pts)"
+                         % (o["id"], o["name"], o["technique"], o["points"]))
+        lines += ['summary: ""   # your attack narrative, path from foothold to DA']
+        with open(flags, "w") as f:
+            f.write("\n".join(lines) + "\n")
+        print("Wrote %s and %s/objectives.json for board %d (%d objectives)."
+              % (flags, outdir, board, len(objs)))
+    print("Start your lab from the portal /me page, connect WireGuard, then hunt the flags.")
+    raise SystemExit(0)
+
 if kind == "ir":
     _write_json("evidence.json", ds)
     ir = os.path.join(outdir, "ir.yml")

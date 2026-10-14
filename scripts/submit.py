@@ -22,7 +22,7 @@ if code != 200:
 board = d["board"]
 kind = d.get("kind", "triage")
 
-fname = {"detection": "rules.yml", "ir": "ir.yml"}.get(kind, "triage.yml")
+fname = {"detection": "rules.yml", "ir": "ir.yml", "flags": "flags.yml"}.get(kind, "triage.yml")
 path = "boards/board%d/%s" % (board, fname)
 if not os.path.exists(path):
     raise SystemExit("No %s yet. Run: python scripts/fetch.py" % path)
@@ -38,7 +38,14 @@ score = res.get("score", 0.0)
 print("Board %d objective score: %.1f%%  (need 95%%)" % (board, score))
 
 rkind = res.get("kind") or kind
-if rkind == "ir":
+if rkind == "flags":
+    fb = (res.get("per_alert") or [{}])[0]
+    print("  objectives captured: %s | points: %s"
+          % (fb.get("objectives_captured", "?"), fb.get("points", "?")))
+    for o in fb.get("objectives", []):
+        mark = "captured" if o.get("captured") else "open"
+        print("    [%-8s] %-28s %s pts" % (mark, o.get("name"), o.get("points")))
+elif rkind == "ir":
     fb = (res.get("per_alert") or [{}])[0]
     def _mark(ok):
         return "ok" if ok else "off"
