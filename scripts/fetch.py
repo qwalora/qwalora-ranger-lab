@@ -1,8 +1,13 @@
-"""Fetch your seeded dataset for the board you are on, and scaffold the answer
-file. Run:  python scripts/fetch.py
+"""Fetch your seeded material for the board you are on, and scaffold the file
+you fill in. Run:  python scripts/fetch.py
 
-Writes boards/board<N>/alerts.json (your dataset, no answers) and a
-boards/board<N>/triage.yml skeleton for you to fill in.
+Boards differ by kind:
+  triage    (boards 1-2): writes boards/board<N>/alerts.json (your dataset) and
+            a boards/board<N>/triage.yml skeleton (one row per event).
+  detection (board 3):    writes boards/board<N>/threats.json + baseline.json
+            (your detection requirements) and a boards/board<N>/rules.yml
+            starter you author your Sigma-style rules in.
+Your work files are never overwritten once they exist.
 """
 import json
 import os
@@ -14,13 +19,57 @@ if code != 200:
     raise SystemExit("Could not fetch dataset: %s" % d.get("error", code))
 
 board = d["board"]
+kind = d.get("kind", "triage")
 ds = d["dataset"]
 outdir = "boards/board%d" % board
 os.makedirs(outdir, exist_ok=True)
 
-with open(os.path.join(outdir, "alerts.json"), "w") as f:
-    json.dump(ds, f, indent=2)
 
+def _write_json(name, obj):
+    with open(os.path.join(outdir, name), "w") as f:
+        json.dump(obj, f, indent=2)
+
+
+if kind == "detection":
+    _write_json("threats.json", ds.get("threats", []))
+    _write_json("baseline.json", ds.get("baseline", []))
+    fields = ", ".join(ds.get("detectable_fields", []))
+    rules = os.path.join(outdir, "rules.yml")
+    if os.path.exists(rules):
+        print("Kept existing %s (not overwriting your work). Requirements refreshed." % rules)
+    else:
+        lines = [
+            "# Board %d detection rules. Author one or more rules that catch the" % board,
+            "# behaviors in threats.json and stay quiet on baseline.json. You are",
+            "# graded on UNSEEN variants of the same techniques, so key on the",
+            "# invariant tradecraft (image + command tokens), not the exact sample.",
+            "#",
+            "# Detectable fields: %s" % fields,
+            "# Modifiers: field|contains, field|startswith, field|endswith; add |all",
+            "#   to require every value (default is any). A bare field is equality.",
+            "# condition: selection names with and/or/not and parentheses, or",
+            "#   'all of them' / 'any of them' / 'N of them'.",
+            "rules:",
+            "  - name: encoded_powershell",
+            "    technique: T1059.001",
+            "    detection:",
+            "      sel:",
+            "        image: powershell.exe",
+            "        command|contains|all:",
+            "          - \"-enc\"",
+            "          - \"-w hidden\"",
+            "      condition: sel",
+            "  # add a rule per technique in threats.json ...",
+        ]
+        with open(rules, "w") as f:
+            f.write("\n".join(lines) + "\n")
+        print("Wrote %s, %s/threats.json (%d) and %s/baseline.json (%d)."
+              % (rules, outdir, len(ds.get("threats", [])), outdir, len(ds.get("baseline", []))))
+    print("Write your rules, then commit and push to be graded on the holdout.")
+    raise SystemExit(0)
+
+# triage kind (boards 1-2)
+_write_json("alerts.json", ds)
 triage = os.path.join(outdir, "triage.yml")
 if os.path.exists(triage):
     print("Kept existing %s (not overwriting your work). Dataset refreshed." % triage)
