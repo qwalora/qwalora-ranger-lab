@@ -22,7 +22,7 @@ if code != 200:
 board = d["board"]
 kind = d.get("kind", "triage")
 
-fname = "rules.yml" if kind == "detection" else "triage.yml"
+fname = {"detection": "rules.yml", "ir": "ir.yml"}.get(kind, "triage.yml")
 path = "boards/board%d/%s" % (board, fname)
 if not os.path.exists(path):
     raise SystemExit("No %s yet. Run: python scripts/fetch.py" % path)
@@ -37,7 +37,19 @@ if code != 200:
 score = res.get("score", 0.0)
 print("Board %d objective score: %.1f%%  (need 95%%)" % (board, score))
 
-if res.get("kind") == "detection" or kind == "detection":
+rkind = res.get("kind") or kind
+if rkind == "ir":
+    fb = (res.get("per_alert") or [{}])[0]
+    def _mark(ok):
+        return "ok" if ok else "off"
+    print("  patient zero: %s | initial access: %s"
+          % (_mark(fb.get("patient_zero_correct")), _mark(fb.get("initial_access_correct"))))
+    print("  affected hosts F1: %s | accounts F1: %s"
+          % (fb.get("affected_hosts_f1", "?"), fb.get("affected_accounts_f1", "?")))
+    print("  timeline membership F1: %s | order: %s | persistence F1: %s"
+          % (fb.get("timeline_membership_f1", "?"), fb.get("timeline_order_score", "?"),
+             fb.get("persistence_f1", "?")))
+elif rkind == "detection":
     fb = (res.get("per_alert") or [{}])[0]
     print("  techniques covered: %s | validation false positives: %s"
           % (fb.get("techniques_covered", "?"), fb.get("validation_false_positives", "?")))

@@ -30,6 +30,32 @@ def _write_json(name, obj):
         json.dump(obj, f, indent=2)
 
 
+if kind == "ir":
+    _write_json("evidence.json", ds)
+    ir = os.path.join(outdir, "ir.yml")
+    n_ev = len(ds.get("alerts", []))
+    if os.path.exists(ir):
+        print("Kept existing %s (not overwriting your work). Evidence refreshed." % ir)
+    else:
+        lines = [
+            "# Board %d incident report. The breach already happened; evidence.json" % board,
+            "# holds %d forensic events across the estate, most of them noise. Scope" % n_ev,
+            "# the compromise and reconstruct what happened. Reference events by id.",
+            "patient_zero:            # the host where the intrusion began, e.g. WKS-0471",
+            "initial_access:          # MITRE ATT&CK id of the entry vector, e.g. T1566.001",
+            "affected_hosts: []       # every host the adversary touched (list)",
+            "affected_accounts: []    # every account they compromised, e.g. corp\\\\m.okafor",
+            "timeline: []             # incident event ids in CHRONOLOGICAL order",
+            "persistence: []          # event id(s) that establish persistence to remove",
+            'summary: ""              # the incident, start to finish',
+        ]
+        with open(ir, "w") as f:
+            f.write("\n".join(lines) + "\n")
+        print("Wrote %s and %s/evidence.json for board %d (%d events)."
+              % (ir, outdir, board, n_ev))
+    print("Scope it, build the timeline, then commit and push to be graded.")
+    raise SystemExit(0)
+
 if kind == "detection":
     _write_json("threats.json", ds.get("threats", []))
     _write_json("baseline.json", ds.get("baseline", []))
