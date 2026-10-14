@@ -1,0 +1,28 @@
+name: Grade submission
+
+# Grades your current board's triage on every push. Add two repository secrets
+# first (Settings -> Secrets and variables -> Actions):
+#   QWALORA_HANDLE  your GitHub handle
+#   QWALORA_TOKEN   your submission token (from your portal /me page)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  grade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install "pyyaml==6.0.2"
+      - name: Submit for grading
+        env:
+          QWALORA_HANDLE: ${{ secrets.QWALORA_HANDLE }}
+          QWALORA_TOKEN: ${{ secrets.QWALORA_TOKEN }}
+          QWALORA_PORTAL: ${{ vars.QWALORA_PORTAL }}
+          PYTHONPATH: scripts
+        run: python scripts/submit.py

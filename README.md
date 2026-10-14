@@ -1,53 +1,41 @@
-# Qwalora Ranger - Cohort 2026-A lab
+# Qwalora Ranger Lab
 
-> These targets are **deliberately vulnerable**. Run them only on loopback,
-> never expose them to a network you care about. This whole repo is hostile by
-> design; that is the point.
+Your working copy of the Qwalora Ranger range. You fork this template once, and
+work each board here as you are promoted. Grading is server-side and answer-free:
+you submit your analysis, the portal re-derives the answer key from your unique
+seed and scores it. You never hold the key, and your scenario is yours alone.
 
-This cohort has 6 boards. Each board is one scenario you work from
-four role perspectives. Your work is graded **answer-free and program-side**:
-the program re-measures your repo and signs the result, so nothing here contains
-the answers, and editing your own status changes nothing.
+New to the program? Read the handbook first: https://ranger.qwalora.com/handbook
 
-| Board | Class | Title |
-|---|---|---|
-| board1 | bola | Broken Object Level Authorization |
-| board2 | bola | Broken Object Level Authorization |
-| board3 | ssrf | Server-Side Request Forgery |
-| board4 | ssrf | Server-Side Request Forgery |
-| board5 | massassign | Mass Assignment Privilege Escalation |
-| board6 | massassign | Mass Assignment Privilege Escalation |
+## One-time setup
 
-## The four roles, per board
+1. Use this template to create your own repo (keep it private).
+2. Add two Actions secrets (Settings → Secrets and variables → Actions):
+   - `QWALORA_HANDLE` — your GitHub handle
+   - `QWALORA_TOKEN` — your submission token, shown on your portal `/me` page
+   (Optional: set a repository variable `QWALORA_PORTAL` to override the portal URL.)
 
-All targets are stdlib Python 3; no Docker required. Replace `boardN` below.
+## The loop, every board
 
-**Red Teamer - exploit it**
 ```
-python3 lab/boards/boardN/targets/web-api/app.py &        # starts on PORT (default 8080)
-TARGET=http://127.0.0.1:8080 python3 lab/boards/boardN/attacker/exploit_*.py
+pip install pyyaml
+python scripts/fetch.py     # pulls your seeded dataset + scaffolds the answer file
+# ... investigate (in your SIEM session or the fetched data), fill in the answers ...
+git commit -am "board N triage" && git push     # CI grades and prints your score
 ```
-Capture the leaked secret and write your proof to
-`evidence/W01/D001/boardN.exploit.json` (see that board's README).
 
-**Detection Engineer - catch it**
-Author a Sigma rule from the stub `detections/sigma/boardN-*.yml.stub` (save it
-without the `.stub`). It must fire on `fixtures/boardN/access.log` and stay
-silent on `fixtures/boardN/access-benign.log`.
+You need 95% on the objective and an approved written report to clear a board.
+Your current board, progress, badges, and token are on your portal `/me` page.
 
-**SOC Analyst - triage it**
-Analyse `lab/boards/boardN/soc/telemetry.jsonl` (unlabeled). Identify the
-malicious events, the attacker, and the incident scope, and submit
-`evidence/W01/D001/boardN.triage.json` (format in the triage README).
+## Layout
 
-**Incident Responder - respond to it**
-Contain (patch the target so the exploit fails), eradicate (remove the planted
-backdoor so `attacker/persistence_probe.py` reports ERADICATED), recover (health
-stays green), and reconstruct the incident in `evidence/W01/D001/boardN.ir.json`,
-including the attacker source IP.
+- `boards/board<N>/` — each board's task (`README.md`), your dataset
+  (`alerts.json`), and your answer file (`triage.yml`).
+- `scripts/fetch.py` — pull your seeded dataset and scaffold answers.
+- `scripts/submit.py` — submit your current board for grading.
+- `.github/workflows/grade.yml` — runs the grader on every push.
 
-## Submitting
+## Rules
 
-Open one pull request per day on a `day/Dxxx` branch. The program grades your
-repo at cohort sync and publishes a signed result; verify it yourself on the
-program's public proof page.
+No AI assistants. No sharing answers (they wouldn't match anyway, your seed is
+unique). Attack only your own range on the red-team boards. See the handbook.

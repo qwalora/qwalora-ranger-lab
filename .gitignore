@@ -1,6 +1,11 @@
+# Your seeded dataset and answer file are pulled per-board by scripts/fetch.py.
+# alerts.json is yours alone (answer-free); triage.yml is your working answer.
+# Commit triage.yml so CI can grade it; alerts.json is regenerated on fetch.
+boards/**/alerts.json
+
+# os / editor / python
+.DS_Store
+*.swp
 __pycache__/
 *.pyc
-/tmp/
-evidence/**/*.exploit.json
-evidence/**/*.triage.json
-evidence/**/*.ir.json
+.venv/
